@@ -1,0 +1,23 @@
+{{ define "content" }}
+<form method="post" action="/running-session" enctype="multipart/form-data">
+    <fieldset class="uk-fieldset">
+        <legend class="uk-legend">When did you run?</legend>
+        <div class="uk-margin">
+            <label for="date">Date:</label>
+            <input id="date" class="uk-input" type="datetime-local" name="date">
+        </div>
+    </fieldset>
+
+    <div class="uk-margin">
+        <div uk-form-custom="target: true">
+            <label for="gpx">GPX file:</label>
+            <input type="file" name="gpx" id="gpx">
+            <input class="uk-input uk-form-width-medium" type="text" placeholder="Select a GPX file">
+        </div>
+    </div>
+
+    <div class="uk-margin">
+        <button type="submit" class="uk-button uk-button-default">Submit</button>
+    </div>
+</form>
+{{ end }}

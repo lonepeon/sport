@@ -1,0 +1,75 @@
+version: '3.2'
+
+services:
+  webapp:
+    build: .
+    image: sport:acceptance-tests
+    depends_on:
+      - mapbox
+      - minio
+    ports:
+      - '9010:8080'
+    deploy:
+      replicas: 0
+    environment:
+      SPORT_USERS: 'amRvZQ==:cGxvcHBsb3A='
+      SPORT_SESSION_KEY: 'averyveryverylongkeyformywebcookiesbecausesecurityisimportant'
+      SPORT_WEB_ADDR: ':8080'
+      SPORT_MAPBOX_ENDPOINT_URL: 'http://mapbox:8080'
+      SPORT_MAPBOX_TOKEN: 'asecurekey'
+      SPORT_AWS_ACCESS_KEY_ID: 'minio'
+      SPORT_AWS_SECRET_ACCESS_KEY: 'minio123'
+      SPORT_AWS_REGION: 'eu-west-3'
+      SPORT_AWS_BUCKET: 'sport.local'
+      SPORT_CDN_URL: 'http://minio:9000/sport.local'
+      SPORT_AWS_ENDPOINT_URL: 'http://minio:9000'
+
+  mapbox:
+    build: mapbox/mock
+    ports:
+      - '9020:8080'
+    environment:
+      ACCESS_TOKEN: 'asecurekey'
+
+  minio:
+    image: 'minio/minio:RELEASE.2022-01-08T03-11-54Z'
+    ports:
+      - '9000:9000'
+      - '9001:9001'
+    command:
+      - 'server'
+      - '--console-address'
+      - ':9001'
+      - '/data'
+    environment:
+      MINIO_ROOT_USER: 'minio'
+      MINIO_ROOT_PASSWORD: 'minio123'
+
+  minio-setup:
+    image: minio/mc
+    depends_on:
+      - minio
+    entrypoint: >
+      /bin/sh -c "
+      /usr/bin/mc alias set minio http://minio:9000 minio minio123;
+      /usr/bin/mc mb minio/sport.local;
+      /usr/bin/mc policy set public minio/sport.local;
+      exit 0;
+      "
+  acceptance-tests-runner:
+    image: cimg/node:16.13.2-browsers
+    deploy:
+      replicas: 0
+    depends_on:
+      - webapp
+    environment:
+      ACCEPTANCE_TEST_SERVER_URL: 'http://webapp:8080'
+      ACCEPTANCE_TEST_USERNAME: 'jdoe'
+      ACCEPTANCE_TEST_PASSWORD: 'plopplop'
+    volumes:
+      - .:/src
+    entrypoint: >
+      /bin/sh -c "
+      cp -r /src/package.json /src/package-lock.json /src/acceptance-tests .;
+      sleep infinity;
+      "

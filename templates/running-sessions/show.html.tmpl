@@ -1,0 +1,32 @@
+{{ define "opengraph" }}
+<meta property="og:title" content="Run - {{ .Data.Activity.RanAt | fmtdatetime }}" />
+<meta property="og:image" content="{{ shareablemapurl .Data.Activity.ShareableMapPath }}" />
+<meta property="og:image:width" content="1600">
+<meta property="og:image:height" content="1600">
+<meta property="og:type" content="website">
+<meta property="og:locale" content="en_US">
+{{ end }}
+
+{{ define "content" }}
+  <div itemscope itemtype="https://schema.org/ExerciseAction" class="uk-card uk-card-default uk-grid-collapse uk-child-width-1-2@s uk-margin" uk-grid>
+    <div class="uk-card-media-left uk-cover-container">
+      <img itemprop="image" src="{{ mapurl .Data.Activity.MapPath }}" alt="" uk-cover>
+      <canvas width="600" height="400"></canvas>
+    </div>
+    <div>
+      <div class="uk-card-body">
+        <h3 itemprop="name" class="uk-card-title">{{ .Data.Activity.RanAt | fmtdatetime }} </h3>
+        <dl class="uk-description-list uk-description-list-divider">
+          <dt>Activity</dt>
+          <dd itemprop="exerciseType">Running</dd>
+          <dt>Distance</dt>
+          <dd itemprop="distance">{{ .Data.Activity.Distance.Kilometers }}km</dd>
+          <dt>Speed</dt>
+          <dd><span itemprop="speed">{{ .Data.Activity.Speed.KilometersPerHour }}km/h</span> ({{.Data.Activity.Speed.MinutesPerKilometer }}min/km)</dd>
+          <dt>Duration</dt>
+          <dd>{{ .Data.Activity.Duration }}</dd>
+        </dl>
+      </div>
+    </div>
+  </div>
+{{ end }}
