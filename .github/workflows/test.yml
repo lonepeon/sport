@@ -1,0 +1,75 @@
+name: test
+
+on:
+  push:
+    branches-ignore:
+      - main
+
+jobs:
+  file-generation-tests:
+    runs-on: "ubuntu-latest"
+    steps:
+      - name: "checkout code"
+        uses: actions/checkout@v2
+      - name: "setup go version"
+        uses: actions/setup-go@v2
+        with:
+          go-version: "1.17.7"
+      - name: "assert go version"
+        run: make test-go-version
+      - name: "assert all files are generated"
+        run: make test-generate
+
+  integration-tests:
+    runs-on: "ubuntu-latest"
+    steps:
+      - name: "checkout code"
+        uses: actions/checkout@v2
+      - name: "setup go version"
+        uses: actions/setup-go@v2
+        with:
+          go-version: "1.17.7"
+      - name: "assert go version"
+        run: make test-go-version
+      - name: "run integration tests"
+        run: make test-integration
+
+  format-tests:
+    runs-on: "ubuntu-latest"
+    steps:
+      - name: "checkout code"
+        uses: actions/checkout@v2
+      - name: "setup go version"
+        uses: actions/setup-go@v2
+        with:
+          go-version: "1.17.7"
+      - name: "assert go version"
+        run: make test-go-version
+      - name: "run code format"
+        run: make test-format
+      - name: "run code lint"
+        run: make test-lint
+      - name: "run code security"
+        run: make test-security
+
+  unit-tests:
+    runs-on: "ubuntu-latest"
+    steps:
+      - name: "checkout code"
+        uses: actions/checkout@v2
+      - name: "setup go version"
+        uses: actions/setup-go@v2
+        with:
+          go-version: "1.17.7"
+      - name: "assert go version"
+        run: make test-go-version
+      - name: "run unit tests"
+        run: make test-unit
+
+  acceptance-tests:
+    runs-on: "ubuntu-latest"
+    steps:
+      - name: "checkout code"
+        uses: actions/checkout@v2
+      - name: "run acceptance tests"
+        run: make test-acceptance-deps test-acceptance

@@ -1,0 +1,22 @@
+{
+  "name": "sport",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest ./acceptance-tests/*.js"
+  },
+  "devDependencies": {
+    "assert": "^2.0.0",
+    "jest": "^27.4.7",
+    "taiko": "^1.2.8"
+  },
+  "jest": {
+    "testMatch": [
+      "**/*_test.js"
+    ],
+    "testTimeout": 60000
+  },
+  "dependencies": {
+    "infinity": "^0.0.4",
+    "sleep": "^6.3.0"
+  }
+}

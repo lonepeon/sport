@@ -1,0 +1,7 @@
+/dist
+.env
+/sport
+/sport-linux-amd64
+/tmp
+/sport.sqlite
+/node_modules

@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html dir="ltr" lang="en" prefix="og: http://ogp.me/ns# fb: http://ogp.me/ns/fb#">
+  <head>
+    <title>Sport</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    {{ block "opengraph" . }}{{ end }}
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/uikit@3.9.4/dist/css/uikit.min.css" />
+  </head>
+  <body>
+    <div class="uk-section-primary uk-preserve-color uk-background-primary uk-light">
+      <nav class="uk-navbar-container uk-navbar-transparent">
+        <div uk-navbar>
+          <div class="uk-navbar-left">
+            <a href="/" class="uk-navbar-item uk-logo">Sport</a>
+            <ul class="uk-navbar-nav">
+              <li class="uk-active">
+                <a href="/">Activities</a>
+              </li>
+              <li>
+                <a href="/running-session/new">Upload activity</a>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </nav>
+    </div>
+
+    <div class="uk-container uk-margin">
+      {{ range .Flashes }}
+        {{- if (eq .Kind "error") }}
+        <div class="uk-alert-danger" uk-alert>
+        {{- else if (eq .Kind "success") }}
+        <div class="uk-alert-success" uk-alert>
+        {{- else }}
+        <div class="uk-alert" uk-alert>
+        {{- end }}
+        <a class="uk-alert-close" uk-close></a>
+        <p>{{ .Message }}</p>
+      </div>
+      {{ end }}
+      {{ template "content" . }}
+    </div>
+  </body>
+  <script src="https://cdn.jsdelivr.net/npm/uikit@3.9.4/dist/js/uikit.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/uikit@3.9.4/dist/js/uikit-icons.min.js"></script>
+</html>
