@@ -1,0 +1,29 @@
+severity:
+  default-severity: error
+
+linters:
+  disable-all: true
+  enable:
+      # Finds unused code
+    - deadcode
+      # Find unchecked errors in go programs
+    - errcheck
+      # Computes and checks the cyclomatic complexity of functions
+    - gocyclo
+      # Checks that sentinel errors are prefixed with the Err and error types are suffixed with the Error
+    - errname
+      # Checks switch on enums contains all statements
+    - exhaustive
+      # Checks no loop value is exported as pointer from inside the loop
+    - exportloopref
+      # Ensure functions are not longer than X lines and don't contain more than Y statements
+    - funlen
+
+linters-settings:
+  exhaustive:
+    default-signifies-exhaustive: true
+  funlen:
+    lines: 60
+    statements: 40
+  gocyclo:
+    min-complexity: 7

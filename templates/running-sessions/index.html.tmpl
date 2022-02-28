@@ -1,0 +1,60 @@
+{{ define "content" }}
+  {{ range $i, $activity := .Data.Activities }}
+    <div class="uk-inline">
+      <div class="uk-card uk-card-default uk-grid-collapse uk-child-width-1-2@s uk-margin" uk-grid>
+        <div class="{{ ternary "uk-card-media-left" "uk-flex-last@s uk-card-media-right" (modulo $i 2) }} uk-cover-container">
+          <img src="{{ mapurl $activity.MapPath }}" alt="" uk-cover>
+          <canvas width="600" height="400"></canvas>
+        </div>
+        <div>
+          <div class="uk-card-body">
+            <h3 class="uk-card-title">
+              <a class="session-share-link" href="/running-session/{{ $activity.Slug }}" title="Copy link">
+                <span uk-icon="icon: copy"></span>
+              </a>
+              {{ $activity.RanAt | fmtdatetime }}
+            </h3>
+            <dl class="uk-description-list uk-description-list-divider">
+              <dt>Activity</dt>
+              <dd>Running</dd>
+              <dt>Distance</dt>
+              <dd>{{ $activity.Distance.Kilometers }}km</dd>
+              <dt>Speed</dt>
+              <dd>{{ $activity.Speed.KilometersPerHour }}km/h ({{$activity.Speed.MinutesPerKilometer }}min/km)</dd>
+              <dt>Duration</dt>
+              <dd>{{ $activity.Duration }}</dd>
+            </dl>
+          </div>
+          {{- if $.Data.Authentication.IsLoggedIn }}
+          <div class="uk-position-top-right	">
+              <button class="uk-button uk-button-danger" uk-toggle="target: #modal-{{ $i }}">
+                Delete
+              </button>
+            </form>
+          </div>
+          <div id="modal-{{ $i }}" uk-modal>
+            <div class="uk-modal-dialog uk-modal-body">
+              <form method="post" action="/running-session/{{ $activity.Slug }}/delete">
+                <h2 class="uk-modal-title">Delete</h2>
+                <p>Do you confirm the deletion of the activity {{ $activity.RanAt | fmtdatetime }}?</p>
+                <div class="uk-text-right">
+                  <button class="uk-button uk-button-default uk-modal-close" type="button">Cancel</button>
+                  <button class="uk-button uk-button-danger" type="submit">I confirm</button>
+                </div>
+              </form>
+            </div>
+          </div>
+          {{- end }}
+        </div>
+      </div>
+    </div>
+{{ end }}
+  <script>
+      document.querySelectorAll(".session-share-link").forEach(function(elem) {
+          elem.addEventListener("click", function(e) {
+              e.preventDefault();
+              navigator.clipboard.writeText(window.location.protocol + "//" + window.location.host + this.getAttribute("href"));
+          })
+      });
+  </script>
+{{ end }}
