@@ -1,0 +1,40 @@
+name: deployment
+
+on:
+  push:
+    branches:
+      - main
+jobs:
+  deployment:
+    runs-on: "ubuntu-latest"
+    steps:
+      - name: "checkout code"
+        uses: actions/checkout@v2
+
+      - name: "set current version environment variable"
+        run: echo "VERSION=$(date +'%Y%m%d%H%M%S')" >> ${GITHUB_ENV}
+
+      - name: "build linux binary"
+        run: make sport-linux-amd64
+
+      - name: "create tag and release"
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const version = process.env.VERSION;
+
+            github.rest.repos.createRelease({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              tag_name: version,
+            });
+      - name: "deploy"
+        run: |
+          echo "${SSH_KEY}" > deploy.key
+          chmod 600 deploy.key
+          echo "${SSH_KNOWN_HOSTS}" > known_hosts
+          make deploy VERSION=${VERSION} SSH_KNOWN_HOSTS=./known_hosts SSH_KEY_PATH=deploy.key DEPLOY_SERVER=${DEPLOY_SERVER}
+        env:
+          SSH_KNOWN_HOSTS: ${{ secrets.SSH_KNOWN_HOSTS }}
+          DEPLOY_SERVER: ${{ secrets.DEPLOY_SERVER }}
+          SSH_KEY: ${{ secrets.SSH_KEY }}
