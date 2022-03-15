@@ -48,11 +48,6 @@ test-generate:
 	@echo $@
 	@./scripts/assert-generated-files-updated.sh
 
-.PHONY: test-go-version
-test-go-version:
-	@echo $@
-	@./scripts/assert-go-version.sh
-
 .PHONY: test
 test: test-unit test-integration test-format test-lint test-security
 
