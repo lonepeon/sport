@@ -10,24 +10,26 @@ jobs:
     steps:
       - name: "checkout code"
         uses: actions/checkout@v2
-
+      - name: "setup CD tools cache"
+        id: cache-cd-tools
+        uses: actions/cache@v2
+        with:
+          path: cd-tools
+          key: ${{ runner.os }}-cd-tools-v20220315143056
+      - name: "download create-release binary"
+        if: steps.cache-cd-tools.outputs.cache-hit != 'true'
+        run: |
+          mkdir -p cd-tools
+          curl -Lo cd-tools/create-release https://github.com/lonepeon/cicd/releases/download/v20220315143056/create-release-linux-386
+          chmod u+x cd-tools/create-release
       - name: "set current version environment variable"
         run: echo "VERSION=$(date +'%Y%m%d%H%M%S')" >> ${GITHUB_ENV}
-
-      - name: "build linux binary"
+      - name: "build linux AMD64 binary"
         run: make sport-linux-amd64
-
-      - name: "create tag and release"
-        uses: actions/github-script@v6
-        with:
-          script: |
-            const version = process.env.VERSION;
-
-            github.rest.repos.createRelease({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              tag_name: version,
-            });
+      - name: "create release"
+        run: go run ./cd-tools/create-release -asset target/sport-linux-amd64 $VERSION main
+        env:
+          PERSONAL_TOKEN: ${{secrets.PERSONAL_TOKEN}}
       - name: "deploy"
         run: |
           echo "${SSH_KEY}" > deploy.key

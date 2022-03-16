@@ -23,7 +23,8 @@ endif
 
 .PHONY: sport-linux-amd64
 sport-linux-amd64: sport-builder
-	docker run --rm -v "$$PWD":/usr/local/bin \
+	@mkdir -p target
+	docker run --rm -v "$$PWD/target":/usr/local/bin \
 		sport-builder:latest \
 		cp /go/src/sport/$@ /usr/local/bin/$@
 

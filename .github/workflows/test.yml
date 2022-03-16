@@ -6,24 +6,24 @@ on:
       - main
 
 jobs:
-  cicd-tools:
+  ci-tools:
     runs-on: "ubuntu-latest"
     steps:
-      - name: "setup CI/CD tools cache"
-        id: cache-cicd-tools
+      - name: "setup CI tools cache"
+        id: cache-ci-tools
         uses: actions/cache@v2
         with:
-          path: cicd-tools
-          key: ${{ runner.os }}-cicd-tools-v20220315143056
+          path: ci-tools
+          key: ${{ runner.os }}-ci-tools-v20220315143056
       - name: "download assert-version binary"
-        if: steps.cache-cicd-tools.outputs.cache-hit != 'true'
+        if: steps.cache-ci-tools.outputs.cache-hit != 'true'
         run: |
-          mkdir -p cicd-tools
-          curl -Lo cicd-tools/assert-version https://github.com/lonepeon/cicd/releases/download/v20220315143056/assert-version-linux-386
-          chmod u+x cicd-tools/assert-version
+          mkdir -p ci-tools
+          curl -Lo ci-tools/assert-version https://github.com/lonepeon/cicd/releases/download/v20220315143056/assert-version-linux-386
+          chmod u+x ci-tools/assert-version
 
   file-generation-tests:
-    needs: cicd-tools
+    needs: ci-tools
     runs-on: "ubuntu-latest"
     steps:
       - name: "checkout code"
@@ -32,19 +32,19 @@ jobs:
         uses: actions/setup-go@v2
         with:
           go-version: "1.17.7"
-      - name: "setup CI/CD tools cache"
-        id: cache-cicd-tools
+      - name: "setup CI tools cache"
+        id: cache-ci-tools
         uses: actions/cache@v2
         with:
-          path: cicd-tools
-          key: ${{ runner.os }}-cicd-tools-v20220315143056
+          path: ci-tools
+          key: ${{ runner.os }}-ci-tools-v20220315143056
       - name: "assert go version"
-        run: cicd-tools/assert-version go
+        run: ci-tools/assert-version go
       - name: "assert all files are generated"
         run: make test-generate
 
   integration-tests:
-    needs: cicd-tools
+    needs: ci-tools
     runs-on: "ubuntu-latest"
     steps:
       - name: "checkout code"
@@ -53,19 +53,19 @@ jobs:
         uses: actions/setup-go@v2
         with:
           go-version: "1.17.7"
-      - name: "setup CI/CD tools cache"
-        id: cache-cicd-tools
+      - name: "setup CI tools cache"
+        id: cache-ci-tools
         uses: actions/cache@v2
         with:
-          path: cicd-tools
-          key: ${{ runner.os }}-cicd-tools-v20220315143056
+          path: ci-tools
+          key: ${{ runner.os }}-ci-tools-v20220315143056
       - name: "assert go version"
-        run: cicd-tools/assert-version go
+        run: ci-tools/assert-version go
       - name: "run integration tests"
         run: make test-integration
 
   format-tests:
-    needs: cicd-tools
+    needs: ci-tools
     runs-on: "ubuntu-latest"
     steps:
       - name: "checkout code"
@@ -74,14 +74,14 @@ jobs:
         uses: actions/setup-go@v2
         with:
           go-version: "1.17.7"
-      - name: "setup CI/CD tools cache"
-        id: cache-cicd-tools
+      - name: "setup CI tools cache"
+        id: cache-ci-tools
         uses: actions/cache@v2
         with:
-          path: cicd-tools
-          key: ${{ runner.os }}-cicd-tools-v20220315143056
+          path: ci-tools
+          key: ${{ runner.os }}-ci-tools-v20220315143056
       - name: "assert go version"
-        run: cicd-tools/assert-version go
+        run: ci-tools/assert-version go
       - name: "run code format"
         run: make test-format
       - name: "run code lint"
@@ -90,7 +90,7 @@ jobs:
         run: make test-security
 
   unit-tests:
-    needs: cicd-tools
+    needs: ci-tools
     runs-on: "ubuntu-latest"
     steps:
       - name: "checkout code"
@@ -99,14 +99,14 @@ jobs:
         uses: actions/setup-go@v2
         with:
           go-version: "1.17.7"
-      - name: "setup CI/CD tools cache"
-        id: cache-cicd-tools
+      - name: "setup CI tools cache"
+        id: cache-ci-tools
         uses: actions/cache@v2
         with:
-          path: cicd-tools
-          key: ${{ runner.os }}-cicd-tools-v20220315143056
+          path: ci-tools
+          key: ${{ runner.os }}-ci-tools-v20220315143056
       - name: "assert go version"
-        run: cicd-tools/assert-version go
+        run: ci-tools/assert-version go
       - name: "run unit tests"
         run: make test-unit
 
