@@ -15,7 +15,7 @@ ifndef DEPLOY_SERVER
 	$(error DEPLOY_SERVER variable is not set)
 endif
 	ssh $(SSH_KNOWN_HOST_OPTION) -i $(SSH_KEY_PATH) $(DEPLOY_SERVER) -- mkdir -p /var/lib/sport/$(VERSION); \
-	scp $(SSH_KNOWN_HOST_OPTION) -i $(SSH_KEY_PATH) sport-linux-amd64 $(DEPLOY_SERVER):/var/lib/sport/$(VERSION)/sport; \
+	scp $(SSH_KNOWN_HOST_OPTION) -i $(SSH_KEY_PATH) target/sport-linux-amd64 $(DEPLOY_SERVER):/var/lib/sport/$(VERSION)/sport; \
 	ssh $(SSH_KNOWN_HOST_OPTION) -i $(SSH_KEY_PATH) $(DEPLOY_SERVER) -- chown -R app:app /var/lib/sport/$(VERSION); \
 	ssh $(SSH_KNOWN_HOST_OPTION) -i $(SSH_KEY_PATH) $(DEPLOY_SERVER) -- ln -fs /var/lib/sport/$(VERSION)/sport /var/lib/sport/sport; \
 	ssh $(SSH_KNOWN_HOST_OPTION) -i $(SSH_KEY_PATH) $(DEPLOY_SERVER) -- systemctl restart sport; \

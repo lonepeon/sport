@@ -6,27 +6,41 @@ import (
 )
 
 func RequireHasError(t *testing.T, got error, format string, args ...interface{}) {
+	t.Helper()
+
 	checksHasError(t.Fatalf, t, got, format, args...)
 }
 
 func RequireErrorContains(t *testing.T, substring string, got error, format string, args ...interface{}) {
+	t.Helper()
+
 	checksErrorContains(t.Fatalf, t, substring, got, format, args...)
 }
 
 func RequireErrorAs(t *testing.T, want interface{}, got error, format string, args ...interface{}) {
+	t.Helper()
+
 	checksErrorAs(t.Fatalf, t, want, got, format, args...)
 }
 
 func RequireErrorIs(t *testing.T, want error, got error, format string, args ...interface{}) {
+	t.Helper()
+
 	checksErrorIs(t.Fatalf, t, want, got, format, args...)
 }
 
 func RequireNoError(t *testing.T, err error, format string, args ...interface{}) {
+	t.Helper()
+
 	checksNoError(t.Fatalf, t, err, format, args...)
 }
 
 func RequireEqualBool(t *testing.T, want bool, got bool, format string, args ...interface{}) {
 	checksEqualBool(t.Fatalf, t, want, got, format, args...)
+}
+
+func RequireEqualBytes(t *testing.T, want []byte, got []byte, format string, args ...interface{}) {
+	checksEqualBytes(t.Fatalf, t, want, got, format, args...)
 }
 
 func RequireEqualStrings(t *testing.T, want []string, got []string, format string, args ...interface{}) {
@@ -67,4 +81,10 @@ func RequireEqualDuration(t *testing.T, want time.Duration, got time.Duration, f
 
 func RequireEqualTime(t *testing.T, want time.Time, got time.Time, format string, args ...interface{}) {
 	checksEqualTime(t.Fatalf, t, want, got, format, args...)
+}
+
+func RequireNotEmptyString(t *testing.T, got string, format string, args ...interface{}) {
+	t.Helper()
+
+	checksNotEmptyString(t.Fatalf, t, got, format, args...)
 }

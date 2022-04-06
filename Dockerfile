@@ -15,7 +15,7 @@ RUN apt-get update && apt-get install -y sqlite3
 
 COPY . .
 
-RUN go build -o sport-${GOOS}-${GOARCH}
-RUN cp ./sport-${GOOS}-${GOARCH} /usr/local/bin/sport
+RUN go build -o sport
+RUN cp ./sport /usr/local/bin/sport
 
 CMD /usr/local/bin/sport

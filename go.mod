@@ -8,11 +8,11 @@ require (
 	github.com/golangci/golangci-lint v1.43.0
 	github.com/google/uuid v1.3.0
 	github.com/gorilla/sessions v1.2.1
-	github.com/lonepeon/golib v0.0.0-20220301125923-6f7f901b8904
-	github.com/mattn/go-sqlite3 v1.14.9
+	github.com/lonepeon/golib v0.0.0-20220406191516-65e2ee52d0f6
+	github.com/mattn/go-sqlite3 v1.14.12
 	github.com/ory/dockertest/v3 v3.8.1
 	golang.org/x/image v0.0.0-20211028202545-6944b10bf410
-	golang.org/x/net v0.0.0-20210805182204-aaa1db679c0d
+	golang.org/x/net v0.0.0-20211112202133-69e39bad7dc2
 	golang.org/x/tools v0.1.7
 	honnef.co/go/tools v0.2.2
 )
@@ -171,6 +171,7 @@ require (
 	go.uber.org/atomic v1.9.0 // indirect
 	go.uber.org/multierr v1.7.0 // indirect
 	go.uber.org/zap v1.21.0 // indirect
+	golang.org/x/crypto v0.0.0-20220331220935-ae2d96664a29 // indirect
 	golang.org/x/mod v0.5.1 // indirect
 	golang.org/x/sys v0.0.0-20211117180635-dee7805ff2e1 // indirect
 	golang.org/x/text v0.3.7 // indirect
