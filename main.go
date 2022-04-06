@@ -6,7 +6,6 @@ import (
 	"embed"
 	"encoding/base64"
 	"fmt"
-	"math"
 	"os"
 	"os/signal"
 	"strings"
@@ -22,6 +21,8 @@ import (
 	"github.com/lonepeon/golib/logger"
 	"github.com/lonepeon/golib/sqlutil"
 	"github.com/lonepeon/golib/web"
+	"github.com/lonepeon/golib/web/authenticationstore"
+	"github.com/lonepeon/golib/web/sessionstore"
 	"github.com/lonepeon/sport/internal/application/service"
 	"github.com/lonepeon/sport/internal/domain"
 	"github.com/lonepeon/sport/internal/infrastructure/annotation"
@@ -44,7 +45,6 @@ type Repository struct {
 
 type Config struct {
 	SQLitePath         string   `env:"SPORT_SQLITE_PATH,default=./sport.sqlite"`
-	SessionStorePath   string   `env:"SPORT_SESSION_STORE_PATH,default=./tmp/sessions"`
 	SessionKey         string   `env:"SPORT_SESSION_KEY,required=true"`
 	UploadFolder       string   `env:"SPORT_UPLOAD_FOLDER,default=./tmp/uploads,required=true"`
 	WebAddress         string   `env:"SPORT_WEB_ADDR,required=true"`
@@ -84,19 +84,15 @@ func run() error {
 		return fmt.Errorf("can't load config: %v", err)
 	}
 
-	users, err := parseUserCfg(cfg.Users)
-	if err != nil {
-		return fmt.Errorf("can't parse USERS environment variable: %v", err)
-	}
-
-	log.Infof("initialize database from %v", cfg.SQLitePath)
 	db, err := initDatabase(log, cfg.SQLitePath)
 	if err != nil {
 		return fmt.Errorf("can't initialize database: %v", err)
 	}
 
-	var sessionstore = sessions.NewFilesystemStore(cfg.SessionStorePath, []byte(cfg.SessionKey))
-	sessionstore.MaxLength(math.MaxInt64)
+	sessionstore := sessionstore.NewSQLite(db, sessions.Options{
+		HttpOnly: true,
+		MaxAge:   1 * 60 * 60 * 24 * 2,
+	}, []byte(cfg.SessionKey))
 
 	repo := repository.NewLogger(log, Repository{
 		Bucket: initBucket(
@@ -117,8 +113,10 @@ func run() error {
 		domainjob.NewDeleteRunningSessionJob(application),
 	)
 
-	authstorage := web.NewCurrentAuthenticatedUserSessionStore(sessionstore)
-	auth := web.NewAuthentication(authstorage, users, "templates/login/new.html.tmpl")
+	auth, err := initAutenticationMiddleware(sessionstore, cfg.Users)
+	if err != nil {
+		return err
+	}
 	webServer := initWebServer(log, sessionstore, cfg.CDNURL)
 	webServer.HandleFunc("GET", "/login", auth.ShowLoginPage("/running-session/new"))
 	webServer.HandleFunc("POST", "/login", auth.Login("/running-session/new"))
@@ -132,30 +130,32 @@ func run() error {
 	return waitForServersShutdown(log, jobServer, webServer, cfg.WebAddress)
 }
 
-func parseUserCfg(rawUsers []string) ([]web.AuthenticationUser, error) {
-	var users []web.AuthenticationUser
+func registerUsers(authBackend web.AuthenticationBackendStorer, rawUsers []string) error {
 	for _, rawUserLine := range rawUsers {
 		rawUser := strings.Split(rawUserLine, ":")
 		if len(rawUser) != 2 {
-			return nil, fmt.Errorf("entry is expected to be base64(username):base64(password) but is '%s'", rawUserLine)
+			return fmt.Errorf("entry is expected to be base64(username):base64(password) but is '%s'", rawUserLine)
 		}
 
 		username, err := base64.URLEncoding.DecodeString(rawUser[0])
 		if err != nil {
-			return nil, fmt.Errorf("username part is not a valid base64 value (value='%s')", rawUser[0])
+			return fmt.Errorf("username part is not a valid base64 value (value='%s')", rawUser[0])
 		}
 		password, err := base64.URLEncoding.DecodeString(rawUser[1])
 		if err != nil {
-			return nil, fmt.Errorf("password part is not a valid base64 value (value='%s')", rawUser[1])
+			return fmt.Errorf("password part is not a valid base64 value (value='%s')", rawUser[1])
 		}
 
-		users = append(users, web.AuthenticationUser{Username: string(username), Password: string(password)})
+		if _, err := authBackend.Register(string(username), string(password)); err != nil {
+			return fmt.Errorf("can't register user (username='%s')", rawUser[0])
+		}
 	}
 
-	return users, nil
+	return nil
 }
 
 func initDatabase(log *logger.Logger, sqlitePath string) (*sql.DB, error) {
+	log.Infof("initialize database from %v", sqlitePath)
 	db, err := sql.Open("sqlite3", sqlitePath)
 	if err != nil {
 		return nil, fmt.Errorf("can't open  sqlite file: %v", err)
@@ -172,6 +172,12 @@ func initDatabase(log *logger.Logger, sqlitePath string) (*sql.DB, error) {
 		return nil, fmt.Errorf("can't run tracker migrations: %v", err)
 	}
 	log.Infof("database executed new sql application migrations %s", strings.Join(trackerMigrationsVersions, ", "))
+
+	sessionStoreMigrationsVersions, err := sqlutil.ExecuteMigrations(context.Background(), db, sessionstore.Migrations())
+	if err != nil {
+		return nil, fmt.Errorf("can't run session store migrations: %v", err)
+	}
+	log.Infof("database executed new sql session store migrations %s", strings.Join(sessionStoreMigrationsVersions, ", "))
 
 	return db, nil
 }
@@ -199,7 +205,7 @@ func initBucket(accessKeyID string, secretAccessKey string, region string, bucke
 	return s3Bucket
 }
 
-func initWebServer(log *logger.Logger, sessionstore *sessions.FilesystemStore, cdnURL string) *web.Server {
+func initWebServer(log *logger.Logger, sessionstore sessions.Store, cdnURL string) *web.Server {
 	tmpl := web.TmplConfiguration{
 		FS:                          htmlTemplateFS,
 		Layout:                      "templates/layout.html.tmpl",
@@ -320,4 +326,16 @@ func initMapbox(token string, endpointURL string) *mapbox.Mapbox {
 	}
 
 	return box
+}
+
+func initAutenticationMiddleware(store sessions.Store, users []string) (web.Authentication, error) {
+	authenticationBrowserStore := web.NewCurrentAuthenticatedUserSessionStore(store)
+	authenticationBackendstore := authenticationstore.NewInMemory()
+	if err := registerUsers(authenticationBackendstore, users); err != nil {
+		return web.Authentication{}, fmt.Errorf("can't parse USERS environment variable: %v", err)
+	}
+
+	auth := web.NewAuthentication(authenticationBrowserStore, authenticationBackendstore, "templates/login/new.html.tmpl")
+
+	return auth, nil
 }

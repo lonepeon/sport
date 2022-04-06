@@ -9,9 +9,10 @@
 
 ## In progress
 
-n/a
+- On merge, create a release with the binaries
 
 ## TODO
 
+- Move session storage from file system to database
 - Add the ability to regenerate assets from an existing running session
 - Split running-session by years

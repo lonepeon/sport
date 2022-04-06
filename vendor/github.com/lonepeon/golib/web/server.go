@@ -36,11 +36,11 @@ type Server struct {
 	tmplCfg      TmplConfiguration
 	router       *mux.Router
 	server       http.Server
-	sessionStore *sessions.FilesystemStore
+	sessionStore sessions.Store
 	tmplFuncs    template.FuncMap
 }
 
-func NewServer(log *logger.Logger, tmplCfg TmplConfiguration, sessionStore *sessions.FilesystemStore) *Server {
+func NewServer(log *logger.Logger, tmplCfg TmplConfiguration, sessionStore sessions.Store) *Server {
 	return &Server{
 		logger:  log,
 		tmplCfg: tmplCfg,
