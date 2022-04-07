@@ -2,8 +2,6 @@ name: test
 
 on:
   push:
-    branches-ignore:
-      - main
 
 jobs:
   ci-tools:
@@ -117,3 +115,45 @@ jobs:
         uses: actions/checkout@v2
       - name: "run acceptance tests"
         run: make test-acceptance-deps test-acceptance
+
+  deployment:
+    needs:
+      - file-generation-tests
+      - integration-tests
+      - format-tests
+      - unit-tests
+      - acceptance-tests
+    runs-on: "ubuntu-latest"
+    steps:
+      - name: "checkout code"
+        uses: actions/checkout@v2
+      - name: "setup CD tools cache"
+        id: cache-cd-tools
+        uses: actions/cache@v2
+        with:
+          path: cd-tools
+          key: ${{ runner.os }}-cd-tools-v20220315143056
+      - name: "download create-release binary"
+        if: steps.cache-cd-tools.outputs.cache-hit != 'true'
+        run: |
+          mkdir -p cd-tools
+          curl -Lo cd-tools/create-release https://github.com/lonepeon/cicd/releases/download/v20220315143056/create-release-linux-386
+          chmod u+x cd-tools/create-release
+      - name: "set current version environment variable"
+        run: echo "VERSION=$(date +'%Y%m%d%H%M%S')" >> ${GITHUB_ENV}
+      - name: "build linux AMD64 binary"
+        run: make sport-linux-amd64
+      - name: "create release"
+        run: ./cd-tools/create-release -asset target/sport-linux-amd64 $VERSION main
+        env:
+          PERSONAL_TOKEN: ${{secrets.PERSONAL_TOKEN}}
+      - name: "deploy"
+        run: |
+          echo "${SSH_KEY}" > deploy.key
+          chmod 600 deploy.key
+          echo "${SSH_KNOWN_HOSTS}" > known_hosts
+          make deploy VERSION=${VERSION} SSH_KNOWN_HOSTS=./known_hosts SSH_KEY_PATH=deploy.key DEPLOY_SERVER=${DEPLOY_SERVER}
+        env:
+          SSH_KNOWN_HOSTS: ${{ secrets.SSH_KNOWN_HOSTS }}
+          DEPLOY_SERVER: ${{ secrets.DEPLOY_SERVER }}
+          SSH_KEY: ${{ secrets.SSH_KEY }}
